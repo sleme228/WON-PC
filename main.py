@@ -1,50 +1,71 @@
+import logging
 import os
 import asyncio
-from aiogram import Bot, Dispatcher, types, Router
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+import pyautogui
+import cv2
+import subprocess
+import ctypes
+import keyboard
+import psutil
+import requests
+from aiogram import Bot, Dispatcher, types
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from aiogram.filters import Command
 
-TOKEN = "6865568473:AAHBq_sgOqJc-11OzvzjcVQE9jh2g5OMubQ"  # Замените на ваш Telegram Bot API токен
-MAC_ADDRESS = "1C-CE-51-45-E3-10"  # MAC-адрес ноутбука
+BOT_TOKEN = '6865568473:AAHUtOP1isIJdS__lKxfGZDuwV24x9UpBX8'  # Токен бота
+CHAT_ID = '5260786785'  # Сюда свой чат id
+SERVER_URL = "http://YOUR_NGROK_URL"  # Замени на адрес ngrok
 
-bot = Bot(token=TOKEN)
+bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
-router = Router()
 
-dp.include_router(router)
+# Создаем клавиатуру
+keyboard = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="📸 Скриншот")],
+        [KeyboardButton(text="🎥 Фото с вебки")],
+        [KeyboardButton(text="🌐 Открыть ссылку")],
+        [KeyboardButton(text="🌙 Спящий режим")],
+        [KeyboardButton(text="☀️ Разбудить")],
+        [KeyboardButton(text="📊 Статус загрузки")]
+    ],
+    resize_keyboard=True
+)
 
-# Функция для отправки Wake-on-LAN сигнала
-def wake_on_lan(mac):
-    os.system(f"wakeonlan {mac}")
-
-# Функция для перевода ПК в гибернацию
-def hibernate_pc():
-    os.system("shutdown /h")
-
-# Команда /start
-@router.message(Command("start"))
+@dp.message(Command("start"))
 async def start(message: types.Message):
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="💻 Включить ноутбук", callback_data="wake")],
-        [InlineKeyboardButton(text="🌙 Ввести в гибернацию", callback_data="hibernate")]
-    ])
-    await message.answer("Выберите действие:", reply_markup=keyboard)
+    if message.from_user.id != int(CHAT_ID):
+        return await message.answer("⛔ Доступ запрещен!")
+    await message.answer("💻 Удаленное управление ПК", reply_markup=keyboard)
 
-# Обработчик нажатий на кнопки
-@router.callback_query(lambda c: c.data in ["wake", "hibernate"])
-async def button_handler(callback_query: types.CallbackQuery):
-    if callback_query.data == "wake":
-        wake_on_lan(MAC_ADDRESS)
-        await callback_query.answer("✅ Сигнал на пробуждение отправлен!")
-    elif callback_query.data == "hibernate":
-        hibernate_pc()
-        await callback_query.answer("💤 Компьютер переведён в режим гибернации!")
-    await callback_query.message.edit_text("Операция выполнена!")
+@dp.message(lambda message: message.text == "📸 Скриншот")
+async def screenshot(message: types.Message):
+    requests.post(f"{SERVER_URL}/screenshot")
+    await message.answer("📸 Скриншот сделан!")
+
+@dp.message(lambda message: message.text == "🎥 Фото с вебки")
+async def webcam_photo(message: types.Message):
+    requests.post(f"{SERVER_URL}/webcam")
+    await message.answer("📷 Фото с вебки сделано!")
+
+@dp.message(lambda message: message.text == "🌙 Спящий режим")
+async def sleep_mode(message: types.Message):
+    requests.post(f"{SERVER_URL}/sleep")
+    await message.answer("💤 ПК переведен в режим сна.")
+
+@dp.message(lambda message: message.text == "☀️ Разбудить")
+async def wakeup_pc(message: types.Message):
+    requests.post(f"{SERVER_URL}/wake")
+    await message.answer("☀️ ПК пробужден!")
+
+@dp.message(lambda message: message.text == "📊 Статус загрузки")
+async def system_status(message: types.Message):
+    response = requests.get(f"{SERVER_URL}/status")
+    await message.answer(response.text)
 
 async def main():
-    print("Бот запущен...")
     await dp.start_polling(bot)
 
-# Запуск бота
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     asyncio.run(main())
