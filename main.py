@@ -42,7 +42,7 @@ async def button_handler(callback_query: types.CallbackQuery):
     await callback_query.message.edit_text("Операция выполнена!")
 
 async def main():
-    await bot.delete_webhook(drop_pending_updates=True)
+    print("Бот запущен...")
     await dp.start_polling(bot)
 
 # Запуск бота
