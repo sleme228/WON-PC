@@ -4,7 +4,7 @@ import os
 
 TOKEN = "6865568473:AAHBq_sgOqJc-11OzvzjcVQE9jh2g5OMubQ"
 MAC_ADDRESS = "1C-CE-51-45-E3-10"  # MAC-адрес ноутбука
-BROADCAST_IP = "37.212.84.17"  # IP вашей сети
+WEBHOOK_URL = "https://ТВОЙ-ДОМЕН/webhook"  # URL для Webhook
 
 # Функция для отправки Wake-on-LAN сигнала
 def wake_on_lan(mac):
@@ -35,10 +35,10 @@ async def button_handler(update: Update, context):
         hibernate_pc()
         await query.edit_message_text("💤 Компьютер переведён в режим гибернации!")
 
-# Запуск бота
+# Запуск бота через Webhook
 app = Application.builder().token(TOKEN).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CallbackQueryHandler(button_handler))
 
 print("Бот запущен...")
-app.run_polling()
+app.run_webhook(listen="0.0.0.0", port=8443, webhook_url=WEBHOOK_URL)
