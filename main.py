@@ -1,4 +1,5 @@
 import os
+import asyncio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler
 
@@ -38,8 +39,7 @@ async def main():
 
     print("Бот запущен через Webhook...")
     await app.bot.set_webhook(url=WEBHOOK_URL)
-    await app.run_webhook(listen="0.0.0.0", port=8443, webhook_url=WEBHOOK_URL)
+    await asyncio.Event().wait()  # Оставляет бота в ожидании
 
 if __name__ == "__main__":
-    import asyncio
     asyncio.run(main())
