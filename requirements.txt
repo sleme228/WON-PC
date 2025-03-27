@@ -1,7 +1,7 @@
-aiogram==3.0.0
+aiogram==3.4.1
 requests==2.31.0
 pyautogui==0.9.54
-opencv-python==4.9.0.80
+opencv-python-headless==4.9.0.80
 keyboard==0.13.5
 psutil==5.9.8
-asyncio==3.4.3
+flask==3.0.2
